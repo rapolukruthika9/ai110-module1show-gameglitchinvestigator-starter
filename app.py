@@ -141,18 +141,23 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
-# FIX: include game_id in the key so each New Game makes a brand-new, empty
+# FIX: pressing Enter in the text field didn't submit the guess. A bare
+# st.button only returns True on a click, so hitting Enter just reran the
+# script with submit=False and the guess was never processed. Wrapping the
+# input and an st.form_submit_button in st.form makes Enter submit the form.
+#
+# include game_id in the key so each New Game makes a brand-new, empty
 # input. Streamlit ties a widget's value to its key, so reusing the same key
 # would restore the previous game's typed guess (and the value can't be
 # cleared from the New Game handler after the widget is already instantiated).
-raw_guess = st.text_input(
-    "Enter your guess:",
-    key=f"guess_input_{difficulty}_{st.session_state.game_id}"
-)
+with st.form(key=f"guess_form_{difficulty}_{st.session_state.game_id}"):
+    raw_guess = st.text_input(
+        "Enter your guess:",
+        key=f"guess_input_{difficulty}_{st.session_state.game_id}"
+    )
+    submit = st.form_submit_button("Submit Guess 🚀")
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    submit = st.button("Submit Guess 🚀")
+col2, col3 = st.columns(2)
 with col2:
     new_game = st.button("New Game 🔁")
 with col3:
