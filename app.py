@@ -62,10 +62,8 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
             points = 10
         return current_score + points
 
-#FIXME: Adds 5 points instead of subtracting 5 points for "Too High" on even attempts  
+    # FIX: added 5 points instead of subtracting on even attempts, so guessing too high could raise the score; now always subtracts like "Too Low"
     if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
         return current_score - 5
 
     if outcome == "Too Low":
