@@ -34,30 +34,27 @@ def parse_guess(raw: str, low: int, high: int):
     return True, value, None
 
 def check_guess(guess, secret):
+    # FIX: removed the except TypeError fallback that compared the secret as a
+    # string. It only existed to paper over the per-attempt stringification of
+    # the secret (now gone), and string comparison gave wrong outcomes
+    # (e.g. "99" > "100" is True). guess and secret are always ints now.
     if guess == secret:
         return "Win", "🎉 Correct!"
 
-    try:
-        if guess > secret:
-            # FIX: hint was flipped (said "Go HIGHER!" when guess was too high)
-            return "Too High", "📉 Go LOWER!"
-        else:
-            # FIX: hint was flipped (said "Go LOWER!" when guess was too low)
-            return "Too Low", "📈 Go HIGHER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            # FIX: hint was flipped (said "Go HIGHER!" when guess was too high)
-            return "Too High", "📉 Go LOWER!"
+    if guess > secret:
+        # FIX: hint was flipped (said "Go HIGHER!" when guess was too high)
+        return "Too High", "📉 Go LOWER!"
+    else:
         # FIX: hint was flipped (said "Go LOWER!" when guess was too low)
         return "Too Low", "📈 Go HIGHER!"
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        # FIX: was 100 - 10 * (attempt_number + 1), a leftover off-by-one that
+        # capped a perfect first-guess win at 80. attempt_number is already
+        # 1-based (1 on the first guess), so a first-guess win now scores 100.
+        points = 100 - 10 * (attempt_number - 1)
         if points < 10:
             points = 10
         return current_score + points
@@ -199,12 +196,11 @@ if submit:
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
-
-        outcome, message = check_guess(guess_int, secret)
+        # FIX: removed the per-attempt stringification of the secret. On even
+        # attempts the secret was cast to str, so check_guess did a
+        # lexicographic comparison (e.g. "99" > "100" is True) and could report
+        # the wrong outcome, not just wrong wording. The secret stays numeric.
+        outcome, message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:
             st.warning(message)
