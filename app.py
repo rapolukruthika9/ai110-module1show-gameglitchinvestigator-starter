@@ -28,7 +28,6 @@ def parse_guess(raw: str):
 
     return True, value, None
 
-
 def check_guess(guess, secret):
     if guess == secret:
         return "Win", "🎉 Correct!"
@@ -54,6 +53,7 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
             points = 10
         return current_score + points
 
+#FIXME: Adds 5 points instead of subtracting 5 points for "Too High" on even attempts  
     if outcome == "Too High":
         if attempt_number % 2 == 0:
             return current_score + 5
@@ -89,9 +89,11 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
+#FIXME: The secret number doesn't update when changing difficulty levels  
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
+#FIXME: The attempt counter doesn't reset properly when starting a new game  
 if "attempts" not in st.session_state:
     st.session_state.attempts = 1
 
@@ -107,7 +109,7 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between 1 and 100. "   #FIXME: The range displayed to the user doesn't update based on the selected difficulty level.
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -131,6 +133,7 @@ with col2:
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
+#FIXME: The new game button doesn't reset the score or history due to a bug in the AI's state management logic. 
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(1, 100)
@@ -178,8 +181,8 @@ if submit:
                 f"You won! The secret was {st.session_state.secret}. "
                 f"Final score: {st.session_state.score}"
             )
-        else:
-            if st.session_state.attempts >= attempt_limit:
+        else:     
+            if st.session_state.attempts >= attempt_limit:  #FIXME: The attempt limit check doesn't work properly 
                 st.session_state.status = "lost"
                 st.error(
                     f"Out of attempts! "
