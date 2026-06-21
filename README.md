@@ -91,14 +91,3 @@ but the behavior pattern below holds for any secret).
    Clicking "New Game 🔁" resets attempts to 8, score to 0, and generates a
    fresh secret in the same range.
 
-## 🧪 Test Results
-
-```
-# Paste your pytest output here, e.g.:
-# pytest tests/
-# ========================= X passed in 0.XXs =========================
-```
-
-## 🚀 Stretch Features
-
-- [ ] [If you choose to complete Challenge 4, describe the Enhanced UI changes here — a screenshot is optional]
