@@ -110,6 +110,10 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# Bumped on each New Game so the guess input gets a fresh (empty) key.
+if "game_id" not in st.session_state:
+    st.session_state.game_id = 0
+
 st.subheader("Make a guess")
 
 st.info(
@@ -124,9 +128,13 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
+# FIX: include game_id in the key so each New Game makes a brand-new, empty
+# input. Streamlit ties a widget's value to its key, so reusing the same key
+# would restore the previous game's typed guess (and the value can't be
+# cleared from the New Game handler after the widget is already instantiated).
 raw_guess = st.text_input(
     "Enter your guess:",
-    key=f"guess_input_{difficulty}"
+    key=f"guess_input_{difficulty}_{st.session_state.game_id}"
 )
 
 col1, col2, col3 = st.columns(3)
@@ -137,10 +145,18 @@ with col2:
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
-#FIXME: The new game button doesn't reset the score or history due to a bug in the AI's state management logic. 
+# FIX: New Game now fully resets game state (status/score/history), not just
+# attempts + secret. Previously status stayed "won"/"lost", so the st.stop()
+# below halted the game immediately and it never actually restarted.
 if new_game:
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.status = "playing"
+    st.session_state.score = 0
+    st.session_state.history = []
+    # FIX: bump game_id so the guess input gets a new key and renders empty,
+    # instead of keeping the previous game's typed value.
+    st.session_state.game_id += 1
     st.success("New game started.")
     st.rerun()
 
