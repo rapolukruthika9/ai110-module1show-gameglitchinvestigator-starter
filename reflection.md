@@ -40,9 +40,9 @@ While troubleshooting an issue where game hints were displaying in reverse, Clau
 I applied the suggested changes to the check_guess function, ran the application locally, and manually tested several inputs to confirm that the hints were now accurate and intuitive.
 
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
-When attempting to write unit tests for the core game logic, Claude suggested importing app.py directly into the test file.
+When I asked AI to fix the score formula and then add a comment it directly added a fixed comment stating the score for guessing the first time is 100 and then for every guess 10 is subtracted from the score. 
 
-This approach was flawed because importing app.py directly triggered all of its Streamlit UI side effects, causing the test suite to crash. I verified the issue by reviewing the existing project structure, which already included a designated logic_utils.py file meant specifically for isolating testable logic. Instead of following the AI's advice, I refactored the game logic into logic_utils.py to keep the tests clean and independent of the UI layer. I alo ran the app directly to run tests myself.
+When I ran `app.py` i realised that the code was not fixed instead only a comment was added. 
 
 
 ---
@@ -65,6 +65,13 @@ The AI helped me to track the bug down. It pointed the lines where the error exi
 ## 4. What did you learn about Streamlit and state?
 
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+Streamlit re-runs the whole script every time you click something, like
+a button or a checkbox. So normal variables don't remember anything —
+they reset each time. `session_state` is the only thing that remembers
+values between clicks, like the secret number, score, and attempts. I
+saw this in the "New Game" bug — it forgot to reset one value, so the
+game got stuck. In short: Streamlit forgets everything except what you
+put in session_state.
 
 ---
 
@@ -72,5 +79,14 @@ The AI helped me to track the bug down. It pointed the lines where the error exi
 
 - What is one habit or strategy from this project that you want to reuse in future labs or projects?
   - This could be a testing habit, a prompting strategy, or a way you used Git.
+Test the bug with real examples before trusting a
+fix. The first "fix" for the hints only changed the text, not the real
+problem. I only caught it because I checked it against actual examples.
+
 - What is one thing you would do differently next time you work with AI on a coding task?
+Write the test cases first, before asking for the fix. That would catch a half-fixed bug faster.
+
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+Code that looks fixed isn't
+always actually fixed. Now I check examples myself instead of trusting
+the comments saying "FIXED."  
