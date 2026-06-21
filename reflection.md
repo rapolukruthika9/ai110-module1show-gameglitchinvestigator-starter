@@ -32,17 +32,33 @@ Document at least 3 bugs you found. Add rows as needed.
 ## 2. How did you use AI as a teammate?
 
 - Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
+I used Claude
+
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
+While troubleshooting an issue where game hints were displaying in reverse, Claude correctly identified that the logic in the check_guess function was inverted and suggested swapping the hint logic to resolve the bug.
+
+I applied the suggested changes to the check_guess function, ran the application locally, and manually tested several inputs to confirm that the hints were now accurate and intuitive.
+
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+When attempting to write unit tests for the core game logic, Claude suggested importing app.py directly into the test file.
+
+This approach was flawed because importing app.py directly triggered all of its Streamlit UI side effects, causing the test suite to crash. I verified the issue by reviewing the existing project structure, which already included a designated logic_utils.py file meant specifically for isolating testable logic. Instead of following the AI's advice, I refactored the game logic into logic_utils.py to keep the tests clean and independent of the UI layer. I alo ran the app directly to run tests myself.
+
 
 ---
 
 ## 3. Debugging and testing your fixes
 
 - How did you decide whether a bug was really fixed?
+I ran a manual test to verify the behavior of the game's hint delivery system using specific boundary inputs.   The bug has been solved as it no longer showed flipped hints. 
+
 - Describe at least one test you ran (manual or using pytest)  
   and what it showed you about your code.
+This test revealed that hints were completely inverted (e.g., giving a "higher" hint when the guess was already too high). After that was fixed, the hints were helpful to get closer to the secret number. 
+
 - Did AI help you design or understand any tests? How?
+The AI helped me to track the bug down. It pointed the lines where the error existed and it suggesting a fix by Fixing the swapped hint messages in both the normal and except paths. 
+
 
 ---
 
