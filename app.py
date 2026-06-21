@@ -11,11 +11,11 @@ def get_range_for_difficulty(difficulty: str):
     return 1, 100
 
 
-def parse_guess(raw: str):
+def parse_guess(raw: str, low: int, high: int):
     if raw is None:
         return False, None, "Enter a guess."
 
-    if raw == "":
+    if raw.strip() == "":
         return False, None, "Enter a guess."
 
     try:
@@ -25,6 +25,11 @@ def parse_guess(raw: str):
             value = int(raw)
     except Exception:
         return False, None, "That is not a number."
+
+    # FIX: previously any integer was accepted, so a wrong/out-of-range input
+    # (e.g. 999 in Easy's 1-20) produced no error. Now reject out-of-range.
+    if value < low or value > high:
+        return False, None, f"Out of range. Enter a number between {low} and {high}."
 
     return True, value, None
 
@@ -93,9 +98,22 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
-#FIXME: The secret number doesn't update when changing difficulty levels  
+#FIX: Switching difficulty mid-game didn't change the secret (it was generated
+# only once and never updated). Now the secret regenerates with the new range
+# and starts a fresh round whenever the difficulty changes.
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
+
+if "difficulty" not in st.session_state:
+    st.session_state.difficulty = difficulty
+
+if st.session_state.difficulty != difficulty:
+    st.session_state.difficulty = difficulty
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
 
 #FIX: Initialize attempts to 0 (was 1) so it matches the New Game reset and "Attempts left" is no longer off by one
 if "attempts" not in st.session_state:
@@ -117,7 +135,7 @@ if "game_id" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "   #FIXME: The range displayed to the user doesn't update based on the selected difficulty level.
+    f"Guess a number between {low} and {high}. "   # FIX: range now follows the selected difficulty instead of being hardcoded to 1-100
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -168,14 +186,19 @@ if st.session_state.status != "playing":
     st.stop()
 
 if submit:
-    st.session_state.attempts += 1
-
-    ok, guess_int, err = parse_guess(raw_guess)
+    ok, guess_int, err = parse_guess(raw_guess, low, high)
 
     if not ok:
+        # FIX: an invalid guess no longer consumes an attempt. Previously the
+        # counter was bumped before validation, so bad input burned attempts
+        # without ever hitting the limit check below.
         st.session_state.history.append(raw_guess)
         st.error(err)
     else:
+        # FIX: count the attempt only for a valid guess, then run the limit
+        # check. The limit check lives in this branch, so incrementing here
+        # keeps the counter and the game-over check in sync.
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
         if st.session_state.attempts % 2 == 0:
@@ -201,8 +224,11 @@ if submit:
                 f"You won! The secret was {st.session_state.secret}. "
                 f"Final score: {st.session_state.score}"
             )
-        else:     
-            if st.session_state.attempts >= attempt_limit:  #FIXME: The attempt limit check doesn't work properly 
+        else:
+            # FIX: limit now works for every difficulty — attempts only counts
+            # valid guesses (see above) and starts at 0, so this fires exactly
+            # when attempt_limit valid guesses have been used.
+            if st.session_state.attempts >= attempt_limit:
                 st.session_state.status = "lost"
                 st.error(
                     f"Out of attempts! "
